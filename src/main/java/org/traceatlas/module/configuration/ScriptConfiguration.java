@@ -1,5 +1,6 @@
 package org.traceatlas.module.configuration;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,14 +26,13 @@ public class ScriptConfiguration {
 
     public static void fetch(String configPath) {
         try {
-            Path path = Paths.get(configPath);
-            String content = path.toString();
             Yaml yaml = new Yaml();
-            Map<String, Object> configMap = yaml.load(content);
-            timeout = (int) configMap.get("timeout");
-            scriptName = (String) configMap.get("script_name");
+            FileInputStream fis = new FileInputStream(configPath);
+            Map<String, Object> configMap = yaml.load(fis);
+            timeout = (int) configMap.get("Timeout");
+            scriptName = (String) configMap.get("ScriptName");
         } catch (Exception e) {
-            logger.warning("Error: Failed to read the configuration file from folder : " + configPath);
+            logger.warning("Error: Failed to read the configuration file from folder : " + e.getMessage());
         }
     }
 }

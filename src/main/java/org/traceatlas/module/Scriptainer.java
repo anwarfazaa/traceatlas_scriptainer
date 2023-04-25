@@ -16,19 +16,23 @@ public class Scriptainer {
     private static final Logger logger = Logger.getLogger(Scriptainer.class.getName());
     private static AtomicBoolean running = new AtomicBoolean(true);
 
-    private static int runInterval = 30;
+    private static int runInterval = 1;
+
+    private static String mainScriptsFolder;
 
     public static void main(String[] args) {
         // Change these paths according to your application structure
-        String pythonExecutable = "path/to/your/app/python/python";
-        String rootFolder = "path/to/your/app/scripts";
+        String pythonExecutable = "/usr/local/bin/python3";
+
         String apiUrl = "http://your_rest_api_service.com/endpoint";
 
         AppConfiguration configuration = new AppConfiguration();
         long maxMemory = configuration.getMaxMemory();
-        List<String> scriptFolders = getScriptFolders(rootFolder);
+        String scriptsFolder = configuration.getJarPath();
 
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(5);
+        List<String> scriptFolders = getScriptFolders(scriptsFolder);
+
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
         List<ScheduledFuture<String>> futures = new ArrayList<>();
         List<Boolean> scriptIsRunning = new ArrayList<>();
 
@@ -37,6 +41,7 @@ public class Scriptainer {
 
         // Load timeout values and script names from config.yml files and initialize scriptIsRunning
         for (String scriptFolder : scriptFolders) {
+            System.out.println("Script found at : " + scriptFolder);
             String configPath = scriptFolder + "/config.yml";
             ScriptConfiguration.fetch(configPath);
             timeouts.add(ScriptConfiguration.timeout);
@@ -62,6 +67,7 @@ public class Scriptainer {
         }, 0, runInterval, TimeUnit.SECONDS);
 
         // Periodically check memory usage
+        /*
         ScheduledExecutorService memoryCheckExecutor = Executors.newScheduledThreadPool(1);
         memoryCheckExecutor.scheduleAtFixedRate(() -> {
             long usedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
@@ -69,7 +75,7 @@ public class Scriptainer {
                 logger.warning("Error: Used memory exceeds the threshold (" + usedMemory + " MB)");
                 running.set(false);
             }
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, 10, TimeUnit.SECONDS);*/
 
         // Collect results with individual timeouts and send to REST API
         while (running.get()) {
@@ -78,8 +84,7 @@ public class Scriptainer {
                 int timeout = timeouts.get(i);
                 try {
                     String result = future.get(timeout, TimeUnit.SECONDS);
-                    System.out.println("Result: " + result);
-                    // sendToRestApi(apiUrl, scriptNames.get(i), result);
+                    sendToRestApi(apiUrl, scriptNames.get(i), result);
                     scriptIsRunning.set(i, false);
 
                     logger.info("Script " + scriptNames.get(i) + " stopped running");
@@ -92,17 +97,20 @@ public class Scriptainer {
                 }
             }
             futures.clear();
+
         }
 
         // Shutdown the executor services
         executor.shutdown();
         scheduler.shutdown();
-        memoryCheckExecutor.shutdown();
+        //memoryCheckExecutor.shutdown();
     }
 
 
 
     public static void sendToRestApi(String url, String scriptName, String data) {
+        System.out.println(data);
+        /*
         OkHttpClient client = new OkHttpClient();
 
         MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -121,6 +129,8 @@ public class Scriptainer {
         } catch (IOException e) {
             logger.warning("Error: Failed to send data to the REST API");
         }
+
+         */
     }
 
     public static List<String> getScriptFolders(String rootFolder) {
