@@ -1,16 +1,15 @@
 package org.traceatlas.module;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import okhttp3.*;
+//import okhttp3.*;
 import org.traceatlas.module.configuration.AppConfiguration;
 import org.traceatlas.module.configuration.ScriptConfiguration;
+import org.traceatlas.module.resources.ScriptsDirectoryScanner;
 import org.traceatlas.module.tasks.PythonScriptTask;
-
 import java.util.concurrent.atomic.AtomicBoolean;
+
 
 public class Scriptainer {
     private static final Logger logger = Logger.getLogger(Scriptainer.class.getName());
@@ -22,15 +21,11 @@ public class Scriptainer {
 
     public static void main(String[] args) {
         // Change these paths according to your application structure
-        String pythonExecutable = "/usr/local/bin/python3";
-
         String apiUrl = "http://your_rest_api_service.com/endpoint";
-
         AppConfiguration configuration = new AppConfiguration();
-        long maxMemory = configuration.getMaxMemory();
-        String scriptsFolder = configuration.getJarPath();
+        ScriptsDirectoryScanner scriptsDirectoryScanner = new ScriptsDirectoryScanner(configuration.getJarPath());
 
-        List<String> scriptFolders = getScriptFolders(scriptsFolder);
+
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
         List<ScheduledFuture<String>> futures = new ArrayList<>();
@@ -40,7 +35,7 @@ public class Scriptainer {
         List<String> scriptNames = new ArrayList<>();
 
         // Load timeout values and script names from config.yml files and initialize scriptIsRunning
-        for (String scriptFolder : scriptFolders) {
+        for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
             System.out.println("Script found at : " + scriptFolder);
             String configPath = scriptFolder + "/config.yml";
             ScriptConfiguration.fetch(configPath);
@@ -52,11 +47,15 @@ public class Scriptainer {
         // Execute Python scripts periodically
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> {
-            for (int i = 0; i < scriptFolders.size(); i++) {
+            for (int i = 0; i < scriptsDirectoryScanner.getScriptsFolders().size(); i++) {
                 if (!scriptIsRunning.get(i)) {
-                    String scriptFolder = scriptFolders.get(i);
+                    String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
                     String scriptPath = scriptFolder + "/main.py";
-                    PythonScriptTask task = new PythonScriptTask(pythonExecutable, scriptPath);
+                    // TO BE CREATED
+                    // Load out individual yaml file for each script configuration
+                    // and submit configuration to PythonScriptTask
+                    // function name is hardcoded to call for pre alpha phase
+                    PythonScriptTask task = new PythonScriptTask(scriptPath,"call");
                     ScheduledFuture<String> future = (ScheduledFuture<String>) executor.submit(task);
                     futures.add(future);
                     scriptIsRunning.set(i, true);
@@ -67,15 +66,15 @@ public class Scriptainer {
         }, 0, runInterval, TimeUnit.SECONDS);
 
         // Periodically check memory usage
-        /*
+
         ScheduledExecutorService memoryCheckExecutor = Executors.newScheduledThreadPool(1);
         memoryCheckExecutor.scheduleAtFixedRate(() -> {
             long usedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
-            if (usedMemory > maxMemory) {
+            if (usedMemory > configuration.getMaxMemory()) {
                 logger.warning("Error: Used memory exceeds the threshold (" + usedMemory + " MB)");
                 running.set(false);
             }
-        }, 0, 10, TimeUnit.SECONDS);*/
+        }, 0, 10, TimeUnit.SECONDS);
 
         // Collect results with individual timeouts and send to REST API
         while (running.get()) {
@@ -133,19 +132,6 @@ public class Scriptainer {
          */
     }
 
-    public static List<String> getScriptFolders(String rootFolder) {
-        List<String> scriptFolders = new ArrayList<>();
-        File root = new File(rootFolder);
 
-        if (root.isDirectory()) {
-            File[] subdirectories = root.listFiles(File::isDirectory);
-            if (subdirectories != null) {
-                for (File subdir : subdirectories) {
-                    scriptFolders.add(subdir.getAbsolutePath());
-                }
-            }
-        }
-        return scriptFolders;
-    }
 }
 
