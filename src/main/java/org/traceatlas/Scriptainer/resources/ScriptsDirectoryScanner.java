@@ -1,4 +1,4 @@
-package org.traceatlas.module.resources;
+package org.traceatlas.Scriptainer.resources;
 
 import org.jetbrains.annotations.NotNull;
 

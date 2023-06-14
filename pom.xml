@@ -53,7 +53,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>org.traceatlas.module.Scriptainer</mainClass>
+                            <mainClass>org.traceatlas.Scriptainer.Scriptainer</mainClass>
                         </manifest>
                     </archive>
                     <finalName>Scriptainer</finalName>
@@ -66,7 +66,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.traceatlas.module.Scriptainer</mainClass>  <!-- replace with your main class -->
+                            <mainClass>org.traceatlas.Scriptainer.Scriptainer</mainClass>  <!-- replace with your main class -->
                         </manifest>
                     </archive>
                     <descriptorRefs>

@@ -1,16 +1,14 @@
-package org.traceatlas.module;
+package org.traceatlas.Scriptainer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
 //import okhttp3.*;
 import okio.Path;
-import org.python.core.Py;
-import org.python.modules._threading._threading;
-import org.traceatlas.module.configuration.AppConfiguration;
-import org.traceatlas.module.configuration.ScriptConfiguration;
-import org.traceatlas.module.resources.ScriptsDirectoryScanner;
-import org.traceatlas.module.tasks.PythonScriptTask;
+import org.traceatlas.Scriptainer.configuration.AppConfiguration;
+import org.traceatlas.Scriptainer.configuration.ScriptConfiguration;
+import org.traceatlas.Scriptainer.resources.ScriptsDirectoryScanner;
+import org.traceatlas.Scriptainer.tasks.PythonScriptTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Thread.sleep;
@@ -33,43 +31,29 @@ public class Scriptainer {
 
         // corePoolSize will need to be picked up from Configuration
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(4);
-        List<Boolean> scriptIsRunning = new ArrayList<>();
-
-        List<Integer> timeouts = new ArrayList<>(); // Individual timeouts for each script in seconds
-        List<String> scriptNames = new ArrayList<>();
-
-        // Load timeout values and script names from config.yml files and initialize scriptIsRunning
-        for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
-            System.out.println("Script found at : " + scriptFolder);
-            String configPath = scriptFolder + "\\config.yml";
-            ScriptConfiguration.fetch(configPath);
-            timeouts.add(ScriptConfiguration.timeout);
-            scriptNames.add(ScriptConfiguration.scriptName);
-            scriptIsRunning.add(false);
-        }
 
         List<PythonScriptTask> tasksQueue = new ArrayList<>();
         List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 
         // Execute Python scripts periodically
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-            for (int i = 0; i < scriptsDirectoryScanner.getScriptsFolders().size(); i++) {
-                if (!scriptIsRunning.get(i)) {
-                    String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
+            for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
+                    //String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
                     String scriptPath = scriptFolder + Path.DIRECTORY_SEPARATOR + "main.py";
                     System.out.println("Script Path: " + scriptPath);
-                    // TO BE CREATED
+                    // Latest update - 15-6-2023 12:37 AM
                     // Load out individual yaml file for each script configuration
                     // and submit configuration to PythonScriptTask
                     // function name is hardcoded to call for pre alpha phase
-                    PythonScriptTask task = new PythonScriptTask(scriptPath,"call");
+
+                    ScriptConfiguration.fetch(scriptFolder + Path.DIRECTORY_SEPARATOR + "config.yml");
+                    PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval);
                     tasksQueue.add(task);
-                    System.out.println("Script " + scriptNames.get(i) + " Added to process queue");
-                }
+                    System.out.println("Script " + ScriptConfiguration.scriptName + " Added to process queue");
             }
 
             for (PythonScriptTask task : tasksQueue){
-                scheduledFutures.add(executor.scheduleAtFixedRate(task, 0,5, TimeUnit.SECONDS));
+                scheduledFutures.add(executor.scheduleAtFixedRate(task, task.getScriptInitRunDelay(),task.getScriptRunInterval(), TimeUnit.SECONDS));
             }
 
 
@@ -87,17 +71,6 @@ public class Scriptainer {
             }
         }, 0, 10, TimeUnit.SECONDS);
         */
-
-        // Collect results with individual timeouts and send to REST API
-        while (running.get()) {
-            // Keep the process running
-
-        }
-
-        // Shutdown the executor services
-        executor.shutdown();
-        scheduler.shutdown();
-        //memoryCheckExecutor.shutdown();
     }
 
 

@@ -1,4 +1,4 @@
-package org.traceatlas.module.resources;
+package org.traceatlas.Scriptainer.resources;
 
 import java.io.IOException;
 import java.nio.file.*;

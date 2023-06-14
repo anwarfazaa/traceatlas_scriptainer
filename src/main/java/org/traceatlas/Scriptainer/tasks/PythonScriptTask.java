@@ -1,27 +1,22 @@
-package org.traceatlas.module.tasks;
+package org.traceatlas.Scriptainer.tasks;
 
-import org.traceatlas.module.exceptions.PythonExecutionException;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
 import java.io.StringWriter;
-import java.util.concurrent.Callable;
+
 import org.python.util.PythonInterpreter;
-import org.python.core.*;
-import org.traceatlas.module.resources.ScriptReader;
 
 public class  PythonScriptTask implements Runnable {
     private final String scriptPath;
-    private final String functionName;
-
-    //private final String scriptContent;
+    private final String scriptName;
+    private final long scriptInitRunDelay;
+    private final long scriptRunInterval;
 
 
     // functionName name has to be passed from the configuration Yaml file
-    public PythonScriptTask( String scriptPath, String functionName) {
+    public PythonScriptTask( String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval) {
         this.scriptPath = scriptPath;
-        this.functionName = functionName;
+        this.scriptName = scriptName;
+        this.scriptRunInterval = scriptRunInterval;
+        this.scriptInitRunDelay = scriptInitRunDelay;
         //this.scriptContent = String.valueOf(new ScriptReader(scriptPath));
     }
 
@@ -43,6 +38,19 @@ public class  PythonScriptTask implements Runnable {
         // to be replaced with REST API communication
         System.out.println(output.toString());
     }
+
+    public String getScriptName() {
+        return this.scriptName;
+    }
+
+    public long getScriptInitRunDelay() {
+        return this.scriptInitRunDelay;
+    }
+
+    public long getScriptRunInterval() {
+        return this.scriptRunInterval;
+    }
+
 
     // Originally call() function was intended to run external python processes
     // Many issues were faced including not being able to measure process lifecycle
