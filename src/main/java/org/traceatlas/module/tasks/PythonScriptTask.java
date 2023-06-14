@@ -5,6 +5,7 @@ import org.traceatlas.module.exceptions.PythonExecutionException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.concurrent.Callable;
 import org.python.util.PythonInterpreter;
 import org.python.core.*;
@@ -29,17 +30,16 @@ public class  PythonScriptTask implements Callable<String> {
     // switched to python
     @Override
     public String call() {
-        try (PythonInterpreter pythonInterpreter = new PythonInterpreter()){
-            // Load the python program
-            pythonInterpreter.execfile(this.scriptPath);
-
-            // call the defined function
-            PyObject pyObject = pythonInterpreter.get(this.functionName);
-            PyObject result = pyObject.__call__();
-            return result.toString();
-        } catch (Exception ex) {
-            return ex.getMessage();
-        }
+        PythonInterpreter pythonInterpreter = new PythonInterpreter();
+        // redirecting output to variable
+        StringWriter output = new StringWriter();
+        pythonInterpreter.setOut(output);
+        // Load the python program
+        pythonInterpreter.execfile(this.scriptPath);
+        // call the defined function
+        // closing interpreter , resource consumptions need check;
+        pythonInterpreter.close();
+        return output.toString();
     }
 
     // Originally call() function was intended to run external python processes
