@@ -11,7 +11,7 @@ import org.python.util.PythonInterpreter;
 import org.python.core.*;
 import org.traceatlas.module.resources.ScriptReader;
 
-public class  PythonScriptTask implements Callable<String> {
+public class  PythonScriptTask implements Runnable {
     private final String scriptPath;
     private final String functionName;
 
@@ -29,7 +29,7 @@ public class  PythonScriptTask implements Callable<String> {
     // New update
     // switched to python
     @Override
-    public String call() {
+    public void run() {
         PythonInterpreter pythonInterpreter = new PythonInterpreter();
         // redirecting output to variable
         StringWriter output = new StringWriter();
@@ -39,7 +39,9 @@ public class  PythonScriptTask implements Callable<String> {
         // call the defined function
         // closing interpreter , resource consumptions need check;
         pythonInterpreter.close();
-        return output.toString();
+        // testing output
+        // to be replaced with REST API communication
+        System.out.println(output.toString());
     }
 
     // Originally call() function was intended to run external python processes

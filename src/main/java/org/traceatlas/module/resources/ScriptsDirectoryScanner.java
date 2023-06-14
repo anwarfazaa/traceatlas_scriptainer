@@ -1,5 +1,7 @@
 package org.traceatlas.module.resources;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,7 @@ public class ScriptsDirectoryScanner {
         this.scriptsFolders = scanScriptFolders(rootFolder);
     }
 
+    @NotNull
     private List<String> scanScriptFolders(String rootFolder) {
         List<String> scriptFolders = new ArrayList<>();
         File root = new File(rootFolder);

@@ -19,7 +19,7 @@ public class AppConfiguration {
     private static final Logger logger = Logger.getLogger(Scriptainer.class.getName());
     private String filePath;
     private int maxMemoryAllowed;
-
+    private String platformURL;
     private String jarPath;
 
     public AppConfiguration() {
@@ -29,22 +29,23 @@ public class AppConfiguration {
             FileInputStream fis = new FileInputStream(this.filePath);
             Map<Object, Object> config = yaml.load(fis);
             maxMemoryAllowed = (int) config.get("MaxMemory");
+            platformURL = (String) config.get("PlatformURL");
 
         } catch (Exception e) {
-            logger.warning("Error: Failed to read the configuration file: " + e.getMessage());
+            System.out.println("Error: Failed to read the configuration file: " + e.getMessage());
         }
     }
 
     private void getAppConfigPath() throws URISyntaxException {
 
-        String currentDir = new File(Scriptainer.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getAbsolutePath();
-        this.jarPath = currentDir + File.separator + "scripts" + File.separator;
-        String filePath = currentDir + File.separator + "config.yml";
+        File currentDir = new File(Scriptainer.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+        this.jarPath = currentDir.getParentFile().getPath() + File.separator + "scripts" + File.separator;
+        String filePath = currentDir.getParentFile().getPath() + File.separator + "config.yml";
         File configFile = new File(filePath);
         if (configFile.exists()) {
             this.filePath = filePath;
         } else {
-            logger.warning("Error: app-conf.yml not found in the current directory");
+            System.out.println("Error: config.yml not found in the current directory " + filePath);
         }
     }
 
@@ -54,5 +55,7 @@ public class AppConfiguration {
     }
 
     public String getJarPath() { return this.jarPath; }
+
+    public String getPlatformURL() { return this.platformURL; }
 
 }
