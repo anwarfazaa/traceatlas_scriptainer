@@ -3,6 +3,7 @@ package org.traceatlas.Scriptainer.tasks;
 import java.io.StringWriter;
 
 import org.python.util.PythonInterpreter;
+import org.traceatlas.Scriptainer.network.PlatformRestClient;
 
 public class  PythonScriptTask implements Runnable {
     private final String scriptPath;
@@ -10,14 +11,16 @@ public class  PythonScriptTask implements Runnable {
     private final long scriptInitRunDelay;
     private final long scriptRunInterval;
 
+    private final PlatformRestClient platformRestClient;
+
 
     // functionName name has to be passed from the configuration Yaml file
-    public PythonScriptTask( String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval) {
+    public PythonScriptTask(String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval, PlatformRestClient platformRestClient) {
         this.scriptPath = scriptPath;
         this.scriptName = scriptName;
         this.scriptRunInterval = scriptRunInterval;
         this.scriptInitRunDelay = scriptInitRunDelay;
-        //this.scriptContent = String.valueOf(new ScriptReader(scriptPath));
+        this.platformRestClient = platformRestClient;
     }
 
 
@@ -37,6 +40,7 @@ public class  PythonScriptTask implements Runnable {
         // testing output
         // to be replaced with REST API communication
         System.out.println(output.toString());
+        this.platformRestClient.postJson(output.toString());
     }
 
     public String getScriptName() {

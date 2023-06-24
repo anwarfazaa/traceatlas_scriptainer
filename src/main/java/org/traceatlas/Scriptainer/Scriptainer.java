@@ -1,17 +1,16 @@
 package org.traceatlas.Scriptainer;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
-//import okhttp3.*;
-import okio.Path;
 import org.traceatlas.Scriptainer.configuration.AppConfiguration;
 import org.traceatlas.Scriptainer.configuration.ScriptConfiguration;
+import org.traceatlas.Scriptainer.network.PlatformRestClient;
 import org.traceatlas.Scriptainer.resources.ScriptsDirectoryScanner;
 import org.traceatlas.Scriptainer.tasks.PythonScriptTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.Thread.sleep;
 
 
 public class Scriptainer {
@@ -35,19 +34,22 @@ public class Scriptainer {
         List<PythonScriptTask> tasksQueue = new ArrayList<>();
         List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 
+        // Prepare communications to Platform
+        PlatformRestClient platformRestClient = new PlatformRestClient();
+
         // Execute Python scripts periodically
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
             for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
                     //String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
-                    String scriptPath = scriptFolder + Path.DIRECTORY_SEPARATOR + "main.py";
+                    String scriptPath = scriptFolder + File.separator + "main.py";
                     System.out.println("Script Path: " + scriptPath);
                     // Latest update - 15-6-2023 12:37 AM
                     // Load out individual yaml file for each script configuration
                     // and submit configuration to PythonScriptTask
                     // function name is hardcoded to call for pre alpha phase
 
-                    ScriptConfiguration.fetch(scriptFolder + Path.DIRECTORY_SEPARATOR + "config.yml");
-                    PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval);
+                    ScriptConfiguration.fetch(scriptFolder + File.separator + "config.yml");
+                    PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval , platformRestClient);
                     tasksQueue.add(task);
                     System.out.println("Script " + ScriptConfiguration.scriptName + " Added to process queue");
             }
@@ -77,27 +79,8 @@ public class Scriptainer {
 
     public static void sendToRestApi(String url, String scriptName, String data) {
         System.out.println(data);
-        /*
-        OkHttpClient client = new OkHttpClient();
 
-        MediaType JSON = MediaType.get("application/json; charset=utf-8");
-        String jsonData = "{\"script_name\": \"" + scriptName + "\", \"data\": " + data + "}";
-        RequestBody body = RequestBody.create(JSON, jsonData);
 
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                logger.warning("Error: Failed to send data to the REST API");
-            }
-        } catch (IOException e) {
-            logger.warning("Error: Failed to send data to the REST API");
-        }
-
-         */
     }
 
 
