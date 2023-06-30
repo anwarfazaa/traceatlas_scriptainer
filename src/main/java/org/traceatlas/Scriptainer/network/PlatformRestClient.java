@@ -9,7 +9,11 @@ import reactor.core.publisher.Mono;
 public class PlatformRestClient {
 
     // private static final HttpClient client = new HttpClient();
-    private static final WebClient platformEndpoint = WebClient.create("http://localhost:8080/scriptainer_data");
+    private WebClient platformEndpoint;
+
+    public PlatformRestClient() {
+        this.platformEndpoint = WebClient.create("http://localhost:8080/scriptainer_data");
+    }
 
 
     public void postJson(String jsonObject) {

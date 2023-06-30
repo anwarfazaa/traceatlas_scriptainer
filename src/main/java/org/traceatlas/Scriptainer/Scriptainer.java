@@ -1,10 +1,12 @@
 package org.traceatlas.Scriptainer;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.logging.*;
 import org.traceatlas.Scriptainer.configuration.AppConfiguration;
+import org.traceatlas.Scriptainer.configuration.JsonConfiguration;
 import org.traceatlas.Scriptainer.configuration.ScriptConfiguration;
 import org.traceatlas.Scriptainer.network.PlatformRestClient;
 import org.traceatlas.Scriptainer.resources.ScriptsDirectoryScanner;
@@ -21,8 +23,9 @@ public class Scriptainer {
 
     private static String mainScriptsFolder;
 
-    public static void main(String[] args) throws InterruptedException {
-        // Change these paths according to your application structure
+    public static void main(String[] args) throws InterruptedException, IOException {
+        // initializing Gson parser , we don't want to create an object each time the script runs
+        JsonConfiguration.initGsonProcessor();
 
         AppConfiguration configuration = new AppConfiguration();
         ScriptsDirectoryScanner scriptsDirectoryScanner = new ScriptsDirectoryScanner(configuration.getJarPath());
@@ -37,8 +40,7 @@ public class Scriptainer {
         // Prepare communications to Platform
         PlatformRestClient platformRestClient = new PlatformRestClient();
 
-        // Execute Python scripts periodically
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+
             for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
                     //String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
                     String scriptPath = scriptFolder + File.separator + "main.py";
@@ -50,12 +52,15 @@ public class Scriptainer {
 
                     ScriptConfiguration.fetch(scriptFolder + File.separator + "config.yml");
                     PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval , platformRestClient);
+
+                    //PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval , platformRestClient);
+
                     tasksQueue.add(task);
                     System.out.println("Script " + ScriptConfiguration.scriptName + " Added to process queue");
             }
 
             for (PythonScriptTask task : tasksQueue){
-                scheduledFutures.add(executor.scheduleAtFixedRate(task, task.getScriptInitRunDelay(),task.getScriptRunInterval(), TimeUnit.SECONDS));
+                executor.scheduleAtFixedRate(task, task.getScriptInitRunDelay(),task.getScriptRunInterval(), TimeUnit.SECONDS);
             }
 
 
