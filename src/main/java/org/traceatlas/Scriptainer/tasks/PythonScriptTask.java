@@ -12,14 +12,14 @@ import org.python.util.PythonInterpreter;
 import org.traceatlas.Scriptainer.dataobjects.ExtensionData;
 import org.traceatlas.Scriptainer.services.DataSenderServiceExtensions;
 
-public class  PythonScriptTask extends ExtensionData implements Runnable {
+public class  PythonScriptTask implements Runnable {
     private final String scriptPath;
     private final long scriptInitRunDelay;
     private final long scriptRunInterval;
 
     private String jsonObject;
 
-    private String outputString;
+    private ExtensionData extensionData;
 
     private String inMemoryJython;
 
@@ -28,12 +28,13 @@ public class  PythonScriptTask extends ExtensionData implements Runnable {
     // functionName name has to be passed from the configuration Yaml file
     public PythonScriptTask(String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval, DataSenderServiceExtensions dataSenderServiceExtensions) throws IOException {
         this.scriptPath = scriptPath;
-        super.setExtensionName(scriptName);
         this.scriptRunInterval = scriptRunInterval;
         this.scriptInitRunDelay = scriptInitRunDelay;
         this.jsonObject = "";
         this.inMemoryJython = readFileIntoString(this.scriptPath);
         this.dataSenderServiceExtensions = dataSenderServiceExtensions;
+        this.extensionData = new ExtensionData();
+        this.extensionData.setExtensionName(scriptName);
     }
 
     public static String readFileIntoString(String filePath) throws IOException {
@@ -58,17 +59,17 @@ public class  PythonScriptTask extends ExtensionData implements Runnable {
         // closing interpreter , resource consumptions need check;
         pythonInterpreter.close();
 
-        super.setExtensionMetricValue(outputStream.toString().replaceAll("\\r|\\n",""));
+        this.extensionData.setExtensionMetricValue(outputStream.toString().replaceAll("\\r|\\n",""));
         // testing output
         // to be replaced with REST API communication
 
-        this.jsonObject = "{\"script_name\": \"" + super.getExtensionName() + "\", \"metric_value\": " + super.getExtensionMetricValue() + "}";
-        if (outputString.length() != 0) {
+        this.jsonObject = "{\"script_name\": \"" + this.extensionData.getExtensionName() + "\", \"metric_value\": " + this.extensionData.getExtensionMetricValue() + "}";
+            // if (outputString.length() != 0) {
             // Switched to use DataSenderService
             // this.platformRestClient.postJson(this.jsonObject);
-            dataSenderServiceExtensions.populateExtensionDataPublisher(this.jsonObject);
+            dataSenderServiceExtensions.populateExtensionDataPublisher(this.extensionData);
 
-        }
+
 
     }
 

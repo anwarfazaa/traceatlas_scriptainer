@@ -26,7 +26,7 @@ public class DataSenderServiceExtensions {
         this.extensionDataList = new ArrayList<>();
     }
 
-    public void populateExtensionDataPublisher(String extensionData) {
+    public void populateExtensionDataPublisher(ExtensionData extensionData) {
         this.extensionDataList.add(extensionData);
     }
 
