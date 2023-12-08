@@ -3,25 +3,19 @@ package org.traceatlas.Scriptainer.tasks;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.python.util.PythonInterpreter;
-import org.traceatlas.Scriptainer.configuration.JsonConfiguration;
-import org.traceatlas.Scriptainer.network.PlatformRestClient;
+import org.traceatlas.Scriptainer.dataobjects.ExtensionData;
+import org.traceatlas.Scriptainer.services.DataSenderServiceExtensions;
 
-import javax.print.DocFlavor;
-
-public class  PythonScriptTask implements Runnable {
+public class  PythonScriptTask extends ExtensionData implements Runnable {
     private final String scriptPath;
-    private final String scriptName;
     private final long scriptInitRunDelay;
     private final long scriptRunInterval;
-
-    private final PlatformRestClient platformRestClient;
 
     private String jsonObject;
 
@@ -29,15 +23,17 @@ public class  PythonScriptTask implements Runnable {
 
     private String inMemoryJython;
 
+    private final DataSenderServiceExtensions dataSenderServiceExtensions;
+
     // functionName name has to be passed from the configuration Yaml file
-    public PythonScriptTask(String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval, PlatformRestClient platformRestClient) throws IOException {
+    public PythonScriptTask(String scriptPath, String scriptName, long scriptInitRunDelay, long scriptRunInterval, DataSenderServiceExtensions dataSenderServiceExtensions) throws IOException {
         this.scriptPath = scriptPath;
-        this.scriptName = scriptName;
+        super.setExtensionName(scriptName);
         this.scriptRunInterval = scriptRunInterval;
         this.scriptInitRunDelay = scriptInitRunDelay;
-        this.platformRestClient = new PlatformRestClient();
         this.jsonObject = "";
         this.inMemoryJython = readFileIntoString(this.scriptPath);
+        this.dataSenderServiceExtensions = dataSenderServiceExtensions;
     }
 
     public static String readFileIntoString(String filePath) throws IOException {
@@ -62,20 +58,20 @@ public class  PythonScriptTask implements Runnable {
         // closing interpreter , resource consumptions need check;
         pythonInterpreter.close();
 
-        outputString = outputStream.toString().replaceAll("\\r|\\n","");
+        super.setExtensionMetricValue(outputStream.toString().replaceAll("\\r|\\n",""));
         // testing output
         // to be replaced with REST API communication
 
-        this.jsonObject = "{\"script_name\": \"" + this.scriptName + "\", \"metric_value\": " + outputString + "}";
+        this.jsonObject = "{\"script_name\": \"" + super.getExtensionName() + "\", \"metric_value\": " + super.getExtensionMetricValue() + "}";
         if (outputString.length() != 0) {
-            this.platformRestClient.postJson(this.jsonObject);
+            // Switched to use DataSenderService
+            // this.platformRestClient.postJson(this.jsonObject);
+            dataSenderServiceExtensions.populateExtensionDataPublisher(this.jsonObject);
+
         }
 
     }
 
-    public String getScriptName() {
-        return this.scriptName;
-    }
 
     public long getScriptInitRunDelay() {
         return this.scriptInitRunDelay;

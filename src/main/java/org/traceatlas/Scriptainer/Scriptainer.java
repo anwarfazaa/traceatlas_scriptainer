@@ -10,6 +10,7 @@ import org.traceatlas.Scriptainer.configuration.JsonConfiguration;
 import org.traceatlas.Scriptainer.configuration.ScriptConfiguration;
 import org.traceatlas.Scriptainer.network.PlatformRestClient;
 import org.traceatlas.Scriptainer.resources.ScriptsDirectoryScanner;
+import org.traceatlas.Scriptainer.services.DataSenderServiceExtensions;
 import org.traceatlas.Scriptainer.tasks.PythonScriptTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,10 +38,13 @@ public class Scriptainer {
         List<PythonScriptTask> tasksQueue = new ArrayList<>();
         List<ScheduledFuture<?>> scheduledFutures = new ArrayList<>();
 
-        // Prepare communications to Platform
-        PlatformRestClient platformRestClient = new PlatformRestClient();
-
-
+        // Prepare communications to Platform (Deprecated)
+        // PlatformRestClient platformRestClient = new PlatformRestClient();
+        
+        // Using DataSenderService to unify a dataset
+        DataSenderServiceExtensions dataSenderServiceExtensions = null;
+        
+        
             for (String scriptFolder : scriptsDirectoryScanner.getScriptsFolders()) {
                     //String scriptFolder = scriptsDirectoryScanner.getScriptsFolders().get(i);
                     String scriptPath = scriptFolder + File.separator + "main.py";
@@ -51,7 +55,8 @@ public class Scriptainer {
                     // function name is hardcoded to call for pre alpha phase
 
                     ScriptConfiguration.fetch(scriptFolder + File.separator + "config.yml");
-                    PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval , platformRestClient);
+                     
+                    PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval, dataSenderServiceExtensions);
 
                     //PythonScriptTask task = new PythonScriptTask(scriptPath,ScriptConfiguration.scriptName, ScriptConfiguration.scriptRunInitDelay, ScriptConfiguration.scriptRunInterval , platformRestClient);
 
