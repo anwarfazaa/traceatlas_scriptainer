@@ -1,11 +1,14 @@
 package org.traceatlas.Scriptainer.tasks;
+
+import org.traceatlas.Scriptainer.dataobjects.ExtensionData;
+
 /*
     This is another possible and high performance scripting tool that can be added to Scriptainer
     Reasons:
         1- Syntax is easy.
         2- capable of using built in java libs
  */
-public class GroovyScriptTask implements Runnable {
+public class GroovyScriptTask extends ExtensionData implements Runnable {
     private final String scriptPath;
     private final String scriptName;
     private final long scriptInitRunDelay;
